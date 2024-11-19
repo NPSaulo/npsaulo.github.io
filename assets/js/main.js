@@ -96,8 +96,8 @@
 				})();
 
 	// Smooth scroll.
-		$('.smooth-scroll').scrolly();
-		$('.smooth-scroll-middle').scrolly({ anchor: 'middle' });
+		//$('.smooth-scroll').scrolly();
+		//$('.smooth-scroll-middle').scrolly({ anchor: 'middle' });
 
 	// Wrapper.
 		$wrapper.children()
@@ -150,96 +150,79 @@
 			.children()
 				.wrapInner('<div class="inner"></div>');
 
-// Gallery.
-$('.gallery')
-    .wrapInner('<div class="inner"></div>')
-    .prepend(browser.mobile ? '' : '<div class="forward"></div><div class="backward"></div>');
+	// Gallery.
+		$('.gallery')
+			.wrapInner('<div class="inner"></div>')
+			.prepend(browser.mobile ? '' : '<div class="forward"></div><div class="backward"></div>')
+			.scrollex({
+				top:		'30vh',
+				bottom:		'30vh',
+				delay:		50,
+				initialize:	function() {
+					$(this).addClass('is-inactive');
+				},
+				terminate:	function() {
+					$(this).removeClass('is-inactive');
+				},
+				enter:		function() {
+					$(this).removeClass('is-inactive');
+				},
+				leave:		function() {
 
-// Clone the first few items and append them to the end to create the looping effect
-$('.gallery .inner').each(function() {
-    var $inner = $(this);
-    var $firstItems = $inner.children().slice(0, 3).clone(); // Adjust slice for the number of items to clone
-    $inner.append($firstItems);
-});
+					var $this = $(this);
 
-$('.gallery')
-    .scrollex({
-        top:        '30vh',
-        bottom:     '30vh',
-        delay:      50,
-        initialize: function() {
-            $(this).addClass('is-inactive');
-        },
-        terminate:  function() {
-            $(this).removeClass('is-inactive');
-        },
-        enter:      function() {
-            var $this = $(this);
-            var $inner = $this.children('.inner');
+					if ($this.hasClass('onscroll-bidirectional'))
+						$this.addClass('is-inactive');
 
-            $this.removeClass('is-inactive');
+				}
+			})
+			.children('.inner')
+				//.css('overflow', 'hidden')
+				.css('overflow-y', browser.mobile ? 'visible' : 'hidden')
+				.css('overflow-x', browser.mobile ? 'scroll' : 'hidden')
+				.scrollLeft(0);
 
-            // Start auto-scroll to the right
-            this._gallery_autoScrollIntervalId = setInterval(function() {
-                // Check if we're at or near the end of the original items
-                if ($inner.scrollLeft() >= $inner[0].scrollWidth - ($firstItems.width() * 3)) {
-                    // Reset scroll position to the beginning of original items
-                    $inner.scrollLeft(0);
-                } else {
-                    // Keep scrolling to the right
-                    $inner.scrollLeft($inner.scrollLeft() + 1);
-                }
-            }, 20); // Adjust interval time for desired scroll speed
-        },
-        leave:      function() {
-            var $this = $(this);
+		// Style #1.
+			// ...
 
-            // Stop auto-scroll
-            clearInterval(this._gallery_autoScrollIntervalId);
+		// Style #2.
+			$('.gallery')
+				.on('wheel', '.inner', function(event) {
 
-            if ($this.hasClass('onscroll-bidirectional'))
-                $this.addClass('is-inactive');
-        }
-    })
-    .children('.inner')
-        .css('overflow-y', browser.mobile ? 'visible' : 'hidden')
-        .css('overflow-x', browser.mobile ? 'scroll' : 'hidden')
-        .scrollLeft(0);
+					var	$this = $(this),
+						delta = (event.originalEvent.deltaX * 10);
 
-// Style #2.
-$('.gallery')
-    .on('wheel', '.inner', function(event) {
-        var $this = $(this),
-            delta = (event.originalEvent.deltaX * 10);
+					// Cap delta.
+						if (delta > 0)
+							delta = Math.min(25, delta);
+						else if (delta < 0)
+							delta = Math.max(-25, delta);
 
-        // Cap delta.
-        if (delta > 0)
-            delta = Math.min(25, delta);
-        else if (delta < 0)
-            delta = Math.max(-25, delta);
+					// Scroll.
+						$this.scrollLeft( $this.scrollLeft() + delta );
 
-        // Scroll.
-        $this.scrollLeft($this.scrollLeft() + delta);
-    })
-    .on('mouseenter', '.forward, .backward', function(event) {
-        var $this = $(this),
-            $inner = $this.siblings('.inner'),
-            direction = ($this.hasClass('forward') ? 1 : -1);
+				})
+				.on('mouseenter', '.forward, .backward', function(event) {
 
-        // Clear move interval.
-        clearInterval(this._gallery_moveIntervalId);
+					var $this = $(this),
+						$inner = $this.siblings('.inner'),
+						direction = ($this.hasClass('forward') ? 1 : -1);
 
-        // Start interval.
-        this._gallery_moveIntervalId = setInterval(function() {
-            $inner.scrollLeft($inner.scrollLeft() + (5 * direction));
-        }, 10);
+					// Clear move interval.
+						clearInterval(this._gallery_moveIntervalId);
 
-    })
-    .on('mouseleave', '.forward, .backward', function(event) {
-        // Clear move interval.
-        clearInterval(this._gallery_moveIntervalId);
-    });
+					// Start interval.
+						this._gallery_moveIntervalId = setInterval(function() {
+							$inner.scrollLeft( $inner.scrollLeft() + (5 * direction) );
+						}, 10);
 
+				})
+				.on('mouseleave', '.forward, .backward', function(event) {
+
+					// Clear move interval.
+						clearInterval(this._gallery_moveIntervalId);
+
+				});
 
 		// Lightbox.
 			$('.gallery.lightbox')
